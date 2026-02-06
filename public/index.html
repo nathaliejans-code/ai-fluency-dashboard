@@ -464,31 +464,31 @@ body {
           <input type="number" id="implComplexity" min="1" max="10" step="1" required>
         </div>
         <div class="form-group">
-          <label>ROI ($ estimated) *</label>
-          <input type="number" id="implROI" min="0" step="any" required>
+          <label>ROI ($ estimated)</label>
+          <input type="number" id="implROI" min="0" step="any">
         </div>
       </div>
       <div class="form-group">
-        <label>Process Owner</label>
-        <input type="text" id="implOwner">
+        <label>Process Owner *</label>
+        <input type="text" id="implOwner" required>
       </div>
       <div class="form-group">
-        <label>Description / Process</label>
-        <textarea id="implDesc"></textarea>
+        <label>Description / Process *</label>
+        <textarea id="implDesc" required></textarea>
       </div>
       <div class="form-group">
-        <label>Impact Description</label>
-        <textarea id="implImpact"></textarea>
+        <label>Impact Description *</label>
+        <textarea id="implImpact" required></textarea>
       </div>
       <div class="form-row-3">
         <div class="form-group">
-          <label>Time Saved (amount)</label>
-          <input type="number" id="implTimeSaved" min="0" step="any">
+          <label>Time Saved (amount) *</label>
+          <input type="number" id="implTimeSaved" min="0" step="any" required>
         </div>
         <div class="form-group">
-          <label>Unit</label>
-          <select id="implUnit">
-            <option value="">None</option>
+          <label>Unit *</label>
+          <select id="implUnit" required>
+            <option value="">Select unit</option>
             <option value="hours/week">hours/week</option>
             <option value="minutes/week">minutes/week</option>
             <option value="minutes/occurrence">minutes/occurrence</option>
@@ -496,7 +496,7 @@ body {
           </select>
         </div>
         <div class="form-group" id="freqGroup" style="display:none;">
-          <label>Frequency (per week)</label>
+          <label>Frequency (per week) *</label>
           <input type="number" id="implFrequency" min="0" step="any">
         </div>
       </div>
@@ -916,6 +916,11 @@ function openDetail(key) {
     </div>
   `;
   document.getElementById('detailOverlay').classList.add('open');
+
+  // Celebrate transformative functions every time they're opened!
+  if (finalLevel === 'transformative') {
+    setTimeout(() => fireConfetti('transformative', fd.name), 300);
+  }
 }
 
 function closeDetail() {
@@ -973,8 +978,9 @@ function closeAddModal() {
 }
 
 document.getElementById('implUnit').addEventListener('change', function() {
-  document.getElementById('freqGroup').style.display =
-    this.value.includes('occurrence') ? '' : 'none';
+  const isOccurrence = this.value.includes('occurrence');
+  document.getElementById('freqGroup').style.display = isOccurrence ? '' : 'none';
+  document.getElementById('implFrequency').required = isOccurrence;
 });
 
 document.getElementById('implForm').addEventListener('submit', async function(e) {
