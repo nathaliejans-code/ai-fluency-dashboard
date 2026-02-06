@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Fluency Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8f9fb;
+  --bg-card: #ffffff;
+  --bg-inset: #f1f3f7;
+  --border: #e2e5eb;
+  --border-light: #edf0f4;
+  --text-primary: #1a1d23;
+  --text-secondary: #5c6370;
+  --text-muted: #9199a5;
+  --accent: #F27038;
+  --accent-light: #fef0e8;
+  --accent-dim: #c45a2c;
+  --gold: #EFB438;
+  --green: #10b981;
+  --green-bg: #ecfdf5;
+  --green-dim: #065f46;
+  --yellow: #eab308;
+  --yellow-bg: #fefce8;
+  --yellow-dim: #854d0e;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --red-dim: #991b1b;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+  --blue-dim: #1e40af;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #2F343A 0%, #1d2025 100%);
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.02em;
+}
+.header h1 span { color: var(--accent); }
+.header p { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+
+/* Summary Bar */
+.summary-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 2rem 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: -1.5rem;
+}
+.summary-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.3rem;
+  text-align: center;
+  min-width: 120px;
+  box-shadow: var(--shadow-sm);
+}
+.summary-stat .label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.summary-stat .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Grid */
+.grid-container { padding: 0 2rem 2rem; max-width: 1200px; margin: 0 auto; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Function Cards */
+.func-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.func-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+.func-card[data-level="transformative"]::before { background: var(--green); }
+.func-card[data-level="adaptive"]::before { background: var(--blue); }
+.func-card[data-level="capable"]::before { background: var(--yellow); }
+.func-card[data-level="unacceptable"]::before { background: var(--red); }
+.func-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--accent);
+}
+.func-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+.func-card .card-name { font-size: 0.9rem; font-weight: 600; }
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-transformative { background: var(--green-bg); color: var(--green-dim); }
+.badge-adaptive { background: var(--blue-bg); color: var(--blue-dim); }
+.badge-capable { background: var(--yellow-bg); color: var(--yellow-dim); }
+.badge-unacceptable { background: var(--red-bg); color: var(--red-dim); }
+.func-card .card-meta { font-size: 0.78rem; color: var(--text-muted); }
+
+/* Overlay / Detail Panel */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 2rem;
+}
+.overlay.open { display: flex; }
+.detail-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 960px;
+  padding: 2rem;
+  position: relative;
+  margin: auto;
+  box-shadow: var(--shadow-lg);
+}
+.detail-panel .close-btn {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: var(--bg-inset); border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 1.1rem; cursor: pointer;
+  line-height: 1; padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.detail-panel .close-btn:hover { background: var(--border); color: var(--text-primary); }
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.detail-header h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
+
+/* Metrics Row */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.metric-box {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+}
+.metric-box .m-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.metric-box .m-value { font-size: 1.3rem; font-weight: 700; }
+.metric-box .m-detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+/* Team Config */
+.team-config {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.team-config h3 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.team-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+.team-fields label { font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem; font-weight: 500; }
+.team-fields input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+.team-fields input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+/* Primary Metric */
+.primary-metric {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.primary-metric h3 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.pm-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.pm-row input, .pm-row select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+.pm-row input { flex: 1; min-width: 150px; }
+.pm-row select { min-width: 130px; }
+.pm-row input:focus, .pm-row select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+/* Implementations List */
+.impl-section h3 {
+  font-size: 0.95rem; font-weight: 600; margin-bottom: 0.8rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.impl-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.impl-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: box-shadow 0.15s;
+}
+.impl-item:hover { box-shadow: var(--shadow-sm); }
+.impl-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+.impl-item-name { font-weight: 600; font-size: 0.88rem; }
+.impl-item-controls { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+.impl-item-controls select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.4rem;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+}
+.impl-item-controls select:focus { outline: none; border-color: var(--accent); }
+.impl-item-owner { font-size: 0.75rem; color: var(--accent); margin-bottom: 0.3rem; font-weight: 500; }
+.impl-item-desc, .impl-item-impact { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; }
+.impl-item-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Buttons */
+.btn {
+  border: none; border-radius: var(--radius-sm);
+  padding: 0.5rem 1.1rem; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 8px rgba(242,112,56,0.25);
+}
+.btn-primary:hover { box-shadow: 0 4px 16px rgba(242,112,56,0.35); }
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--red);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+}
+.btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  justify-content: center; align-items: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.modal h3 { font-size: 1.1rem; margin-bottom: 1.2rem; font-weight: 700; }
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+  display: block; font-size: 0.78rem;
+  color: var(--text-secondary); margin-bottom: 0.3rem; font-weight: 500;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  color: var(--text-primary);
+  font-size: 0.85rem; font-family: inherit;
+}
+.form-group textarea { resize: vertical; min-height: 60px; background: var(--bg-inset); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+.modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.2rem; }
+.btn-secondary {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.btn-secondary:hover { background: var(--border-light); }
+
+/* Scoring Sidebar */
+.scoring-info {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+.scoring-info h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary); }
+.scoring-info ul { list-style: none; font-size: 0.75rem; color: var(--text-muted); }
+.scoring-info ul li { padding: 0.2rem 0; padding-left: 0.8rem; position: relative; }
+.scoring-info ul li::before {
+  content: ''; position: absolute; left: 0; top: 50%;
+  width: 4px; height: 4px; border-radius: 50%; transform: translateY(-50%);
+}
+.scoring-info .si-trans li::before { background: var(--green); }
+.scoring-info .si-adap li::before { background: var(--blue); }
+.scoring-info .si-cap li::before { background: var(--yellow); }
+.scoring-info .si-unac li::before { background: var(--red); }
+.scoring-info .si-section { margin-bottom: 0.6rem; }
+.scoring-info .si-section-title {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.2rem;
+}
+.si-trans .si-section-title { color: var(--green); }
+.si-adap .si-section-title { color: var(--blue); }
+.si-cap .si-section-title { color: var(--yellow-dim); }
+.si-unac .si-section-title { color: var(--red); }
+
+/* Efficiency Breakdown */
+.eff-breakdown { margin-top: 0.5rem; }
+.eff-breakdown-item {
+  display: flex; justify-content: space-between;
+  font-size: 0.75rem; color: var(--text-secondary); padding: 0.15rem 0;
+}
+.eff-breakdown-item .eff-name { flex: 1; }
+.eff-breakdown-item .eff-hrs { color: var(--accent); font-weight: 600; min-width: 70px; text-align: right; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .header { padding: 1.5rem 1rem; }
+  .header h1 { font-size: 1.4rem; }
+  .summary-bar { padding: 0 1rem 1rem; }
+  .grid-container { padding: 0 1rem 1rem; }
+  .detail-panel { padding: 1.2rem; }
+  .overlay { padding: 0.8rem; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI Fluency Dashboard</h1>
+  <p>Company-wide AI implementation tracking &amp; maturity scoring</p>
+</div>
+
+<div class="summary-bar" id="summaryBar"></div>
+
+<div class="grid-container">
+  <div class="grid" id="functionGrid"></div>
+</div>
+
+<!-- Detail Panel Overlay -->
+<div class="overlay" id="detailOverlay">
+  <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<!-- Add Implementation Modal -->
+<div class="modal-overlay" id="addImplModal">
+  <div class="modal">
+    <h3>Add Implementation</h3>
+    <form id="implForm">
+      <div class="form-group">
+        <label>Task / Implementation Name *</label>
+        <input type="text" id="implName" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Complexity (1-10) *</label>
+          <input type="number" id="implComplexity" min="1" max="10" step="1" required>
+        </div>
+        <div class="form-group">
+          <label>ROI ($ estimated) *</label>
+          <input type="number" id="implROI" min="0" step="any" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Process Owner</label>
+        <input type="text" id="implOwner">
+      </div>
+      <div class="form-group">
+        <label>Description / Process</label>
+        <textarea id="implDesc"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Impact Description</label>
+        <textarea id="implImpact"></textarea>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Time Saved (amount)</label>
+          <input type="number" id="implTimeSaved" min="0" step="any">
+        </div>
+        <div class="form-group">
+          <label>Unit</label>
+          <select id="implUnit">
+            <option value="">None</option>
+            <option value="hours/week">hours/week</option>
+            <option value="minutes/week">minutes/week</option>
+            <option value="minutes/occurrence">minutes/occurrence</option>
+            <option value="hours/occurrence">hours/occurrence</option>
+          </select>
+        </div>
+        <div class="form-group" id="freqGroup" style="display:none;">
+          <label>Frequency (per week)</label>
+          <input type="number" id="implFrequency" min="0" step="any">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Implementation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ========================
+// STATE
+// ========================
+let functionData = {};
+let selectedFunc = null;
+
+// ========================
+// API
+// ========================
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('API error:', res.status, err);
+  }
+  return res.json();
+}
+
+async function loadAll() {
+  functionData = await api('/api/functions');
+  renderGrid();
+}
+
+// ========================
+// SCORING (client-side for instant UI)
+// ========================
+
+// Auto-calculate an implementation's maturity level from complexity, ROI, and time saved
+function calcImplLevel(impl) {
+  // Complexity score: 1-3 = Capable(1), 4-7 = Adaptive(2), 8-10 = Transformative(3)
+  const c = parseFloat(impl.complexity) || 0;
+  let complexityScore = 1;
+  if (c >= 8) complexityScore = 3;
+  else if (c >= 4) complexityScore = 2;
+
+  // ROI score: <1000 = Capable(1), 1000-10000 = Adaptive(2), >10000 = Transformative(3)
+  const roi = parseFloat(impl.roi) || 0;
+  let roiScore = 1;
+  if (roi > 10000) roiScore = 3;
+  else if (roi >= 1000) roiScore = 2;
+
+  // Time saved score: convert to hrs/week, <1 = Capable(1), 1-5 = Adaptive(2), >5 = Transformative(3)
+  let hrsPerWeek = 0;
+  const ts = parseFloat(impl.timeSaved) || 0;
+  const freq = parseFloat(impl.frequency) || 0;
+  if (ts && impl.unit) {
+    switch (impl.unit) {
+      case 'hours/week': hrsPerWeek = ts; break;
+      case 'minutes/week': hrsPerWeek = ts / 60; break;
+      case 'minutes/occurrence': hrsPerWeek = (ts * freq) / 60; break;
+      case 'hours/occurrence': hrsPerWeek = ts * freq; break;
+    }
+  }
+  let timeScore = 1;
+  if (hrsPerWeek > 5) timeScore = 3;
+  else if (hrsPerWeek >= 1) timeScore = 2;
+
+  const avg = (complexityScore + roiScore + timeScore) / 3;
+  if (avg > 2.3) return 'transformative';
+  if (avg >= 1.7) return 'adaptive';
+  return 'capable';
+}
+
+function getLevelPoints(level) {
+  if (level === 'capable') return 1;
+  if (level === 'adaptive') return 3;
+  if (level === 'transformative') return 5;
+  return 0;
+}
+
+function calcImplScore(implementations) {
+  let totalPoints = 0;
+  const counts = { capable: 0, adaptive: 0, transformative: 0 };
+  implementations.forEach(i => {
+    const level = calcImplLevel(i);
+    totalPoints += getLevelPoints(level);
+    counts[level] = (counts[level] || 0) + 1;
+  });
+  return { totalPoints, counts };
+}
+
+function getImplLevel(implementations) {
+  const { totalPoints, counts } = calcImplScore(implementations);
+  const t = counts.transformative || 0;
+  const a = counts.adaptive || 0;
+  if (t >= 2) return 'transformative';
+  if (t >= 1 && a >= 3 && totalPoints >= 20) return 'transformative';
+  if (a >= 5) return 'transformative';
+  if (a >= 3) return 'adaptive';
+  if (t >= 1 && a >= 1) return 'adaptive';
+  if (totalPoints >= 10) return 'adaptive';
+  if ((counts.capable || 0) >= 1 || a >= 1 || totalPoints >= 3) return 'capable';
+  return 'unacceptable';
+}
+
+function calcEfficiency(fd) {
+  const tc = fd.teamConfig;
+  if (!tc.totalHours || tc.totalHours <= 0) return null;
+  let totalHoursWeek = 0;
+  const breakdown = [];
+  fd.implementations.forEach(impl => {
+    if (!impl.timeSaved || !impl.unit) return;
+    let hrs = 0;
+    const ts = parseFloat(impl.timeSaved) || 0;
+    const freq = parseFloat(impl.frequency) || 0;
+    switch (impl.unit) {
+      case 'hours/week': hrs = ts; break;
+      case 'minutes/week': hrs = ts / 60; break;
+      case 'minutes/occurrence': hrs = (ts * freq) / 60; break;
+      case 'hours/occurrence': hrs = ts * freq; break;
+    }
+    if (hrs > 0) {
+      totalHoursWeek += hrs;
+      breakdown.push({ name: impl.name, hours: hrs });
+    }
+  });
+  if (totalHoursWeek === 0) return null;
+  const pct = (totalHoursWeek / tc.totalHours) * 100;
+  let level = 'capable';
+  if (pct >= 25) level = 'transformative';
+  else if (pct >= 10) level = 'adaptive';
+  return { totalHoursWeek, pct, level, breakdown };
+}
+
+const LEVEL_RANK = { unacceptable: 0, capable: 1, adaptive: 2, transformative: 3 };
+
+function getFinalScore(fd) {
+  const implLevel = getImplLevel(fd.implementations);
+  const eff = calcEfficiency(fd);
+  let finalLevel = implLevel;
+  let boostNote = '';
+  if (eff) {
+    if (LEVEL_RANK[eff.level] > LEVEL_RANK[implLevel]) {
+      finalLevel = eff.level;
+      boostNote = 'Boosted by efficiency metrics';
+    } else if (LEVEL_RANK[eff.level] === LEVEL_RANK[implLevel]) {
+      boostNote = 'Validated by efficiency metrics';
+    }
+  }
+  return { finalLevel, implLevel, eff, boostNote };
+}
+
+// ========================
+// RENDER
+// ========================
+function renderGrid() {
+  const grid = document.getElementById('functionGrid');
+  grid.innerHTML = '';
+  let totalImpl = 0;
+  const levelCounts = { transformative: 0, adaptive: 0, capable: 0, unacceptable: 0 };
+
+  Object.entries(functionData).forEach(([key, fd]) => {
+    const { finalLevel } = getFinalScore(fd);
+    const implCount = fd.implementations.length;
+    totalImpl += implCount;
+    levelCounts[finalLevel]++;
+
+    const card = document.createElement('div');
+    card.className = 'func-card';
+    card.dataset.level = finalLevel;
+    card.onclick = () => openDetail(key);
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-name">${fd.name}</span>
+        <span class="badge badge-${finalLevel}">${finalLevel}</span>
+      </div>
+      <div class="card-meta">${implCount} implementation${implCount !== 1 ? 's' : ''}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="summary-stat"><div class="label">Functions</div><div class="value">${Object.keys(functionData).length}</div></div>
+    <div class="summary-stat"><div class="label">Implementations</div><div class="value">${totalImpl}</div></div>
+    <div class="summary-stat"><div class="label" style="color:var(--green)">Transformative</div><div class="value" style="color:var(--green)">${levelCounts.transformative}</div></div>
+    <div class="summary-stat"><div class="label" style="color:var(--blue)">Adaptive</div><div class="value" style="color:var(--blue)">${levelCounts.adaptive}</div></div>
+    <div class="summary-stat"><div class="label" style="color:var(--yellow)">Capable</div><div class="value" style="color:var(--yellow)">${levelCounts.capable}</div></div>
+    <div class="summary-stat"><div class="label" style="color:var(--red)">Unacceptable</div><div class="value" style="color:var(--red)">${levelCounts.unacceptable}</div></div>
+  `;
+}
+
+function openDetail(key) {
+  selectedFunc = key;
+  const fd = functionData[key];
+  const { finalLevel, implLevel, eff, boostNote } = getFinalScore(fd);
+  const { totalPoints, counts } = calcImplScore(fd.implementations);
+  const panel = document.getElementById('detailPanel');
+
+  let efficiencyHTML = '';
+  if (eff) {
+    const breakdownHTML = eff.breakdown.map(b =>
+      `<div class="eff-breakdown-item"><span class="eff-name">${esc(b.name)}</span><span class="eff-hrs">${b.hours.toFixed(1)} hrs/wk</span></div>`
+    ).join('');
+    efficiencyHTML = `
+      <div class="metric-box">
+        <div class="m-label">Efficiency</div>
+        <div class="m-value" style="color:${levelColor(eff.level)}">${eff.pct.toFixed(1)}%</div>
+        <div class="m-detail">${eff.totalHoursWeek.toFixed(1)} hrs saved / ${fd.teamConfig.totalHours} hrs total</div>
+        <div class="eff-breakdown">${breakdownHTML}</div>
+      </div>
+    `;
+  }
+
+  const boostHTML = boostNote ? `<div class="m-detail" style="color:var(--accent);margin-top:0.2rem">${boostNote}</div>` : '';
+
+  const implListHTML = fd.implementations.map(impl => {
+    const implLvl = calcImplLevel(impl);
+    return `
+    <div class="impl-item">
+      <div class="impl-item-header">
+        <div>
+          <div class="impl-item-name">${esc(impl.name)} <span class="badge badge-${implLvl}" style="margin-left:0.4rem">${implLvl}</span></div>
+          ${impl.owner ? `<div class="impl-item-owner">${esc(impl.owner)}</div>` : ''}
+        </div>
+        <div class="impl-item-controls">
+          <button class="btn btn-danger" onclick="deleteImpl('${key}','${impl.id}')">Delete</button>
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem">Complexity: ${impl.complexity || '?'}/10 &middot; ROI: $${(impl.roi || 0).toLocaleString()}</div>
+      ${impl.description ? `<div class="impl-item-desc">${esc(impl.description)}</div>` : ''}
+      ${impl.impact ? `<div class="impl-item-impact" style="color:var(--accent-dim)"><strong>Impact:</strong> ${esc(impl.impact)}</div>` : ''}
+      ${impl.timeSaved ? `<div class="impl-item-time">Time saved: ${impl.timeSaved} ${impl.unit || ''}${impl.unit && impl.unit.includes('occurrence') ? ' (x' + (impl.frequency||0) + '/wk)' : ''}</div>` : ''}
+    </div>
+  `;}).join('');
+
+  panel.innerHTML = `
+    <button class="close-btn" onclick="closeDetail()">&times;</button>
+    <div class="detail-header">
+      <h2>${fd.name}</h2>
+      <span class="badge badge-${finalLevel}">${finalLevel}</span>
+    </div>
+    <div class="metrics-row">
+      <div class="metric-box">
+        <div class="m-label">Final Score</div>
+        <div class="m-value" style="color:${levelColor(finalLevel)}">${capitalize(finalLevel)}</div>
+        ${boostHTML}
+      </div>
+      <div class="metric-box">
+        <div class="m-label">Implementation Score</div>
+        <div class="m-value">${totalPoints} pts</div>
+        <div class="m-detail">${counts.transformative||0}T / ${counts.adaptive||0}A / ${counts.capable||0}C</div>
+      </div>
+      ${efficiencyHTML}
+      <div class="metric-box">
+        <div class="m-label">Implementations</div>
+        <div class="m-value">${fd.implementations.length}</div>
+      </div>
+    </div>
+    <div class="team-config">
+      <h3>Team Configuration</h3>
+      <div class="team-fields">
+        <div><label>Full-time Staff</label><input type="number" min="0" value="${fd.teamConfig.fullTime}" onchange="updateTeam('${key}','fullTime',this.value)"></div>
+        <div><label>Part-time Staff</label><input type="number" min="0" value="${fd.teamConfig.partTime}" onchange="updateTeam('${key}','partTime',this.value)"></div>
+        <div><label>PT Hours / Week</label><input type="number" min="0" value="${fd.teamConfig.partTimeHours}" onchange="updateTeam('${key}','partTimeHours',this.value)"></div>
+        <div><label>Total Hours / Week</label><input type="number" min="0" value="${fd.teamConfig.totalHours}" onchange="updateTeam('${key}','totalHours',this.value)"></div>
+      </div>
+    </div>
+    <div class="primary-metric">
+      <h3>Primary Metric (Optional)</h3>
+      <div class="pm-row">
+        <input type="text" placeholder="e.g. Revenue per rep" value="${esc(fd.metrics.primary||'')}" onchange="updatePrimaryMetric('${key}','primary',this.value)">
+        <select onchange="updatePrimaryMetric('${key}','primaryLevel',this.value)">
+          <option value="">No level</option>
+          <option value="capable" ${fd.metrics.primaryLevel==='capable'?'selected':''}>Capable</option>
+          <option value="adaptive" ${fd.metrics.primaryLevel==='adaptive'?'selected':''}>Adaptive</option>
+          <option value="transformative" ${fd.metrics.primaryLevel==='transformative'?'selected':''}>Transformative</option>
+        </select>
+      </div>
+    </div>
+    <div class="impl-section">
+      <h3>
+        Implementations
+        <button class="btn btn-primary" onclick="openAddModal('${key}')">+ Add Implementation</button>
+      </h3>
+      <div class="impl-list">${implListHTML || '<p style="color:var(--text-muted);font-size:0.85rem;">No implementations yet. Add one to get started.</p>'}</div>
+    </div>
+    <div class="scoring-info">
+      <h4>Scoring Logic</h4>
+      <div class="si-section si-trans">
+        <div class="si-section-title">Transformative</div>
+        <ul>
+          <li>2+ Transformative implementations</li>
+          <li>1 Transformative + 3+ Adaptive + 20+ points</li>
+          <li>5+ Adaptive implementations</li>
+          <li>OR efficiency >= 25%</li>
+        </ul>
+      </div>
+      <div class="si-section si-adap">
+        <div class="si-section-title">Adaptive</div>
+        <ul>
+          <li>3+ Adaptive implementations</li>
+          <li>1 Transformative + any Adaptive</li>
+          <li>10+ total points</li>
+          <li>OR efficiency 10-25%</li>
+        </ul>
+      </div>
+      <div class="si-section si-cap">
+        <div class="si-section-title">Capable</div>
+        <ul>
+          <li>1+ Capable or Adaptive implementation</li>
+          <li>3+ total points</li>
+          <li>OR efficiency < 10%</li>
+        </ul>
+      </div>
+      <div class="si-section si-unac">
+        <div class="si-section-title">Unacceptable</div>
+        <ul><li>No qualifying implementations or metrics</li></ul>
+      </div>
+      <div style="margin-top:0.6rem;font-size:0.7rem;color:var(--text-muted)">
+        Points: Capable=1, Adaptive=3, Transformative=5<br>
+        Final score = higher of implementation score vs efficiency score.
+      </div>
+    </div>
+  `;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  selectedFunc = null;
+}
+
+function levelColor(level) {
+  switch(level) {
+    case 'transformative': return 'var(--green)';
+    case 'adaptive': return 'var(--blue)';
+    case 'capable': return 'var(--yellow)';
+    default: return 'var(--red)';
+  }
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ========================
+// ACTIONS (all hit the API)
+// ========================
+async function deleteImpl(funcKey, implId) {
+  if (!confirm('Delete this implementation?')) return;
+  await api(`/api/functions/${funcKey}/implementations/${implId}`, { method: 'DELETE' });
+  await loadAll();
+  openDetail(funcKey);
+}
+
+async function updateTeam(funcKey, field, val) {
+  const body = {};
+  body[field] = parseFloat(val) || 0;
+  await api(`/api/functions/${funcKey}/team`, { method: 'PUT', body });
+  await loadAll();
+  openDetail(funcKey);
+}
+
+async function updatePrimaryMetric(funcKey, field, val) {
+  const body = {};
+  body[field] = val;
+  await api(`/api/functions/${funcKey}/metrics`, { method: 'PUT', body });
+}
+
+let addModalFunc = null;
+function openAddModal(funcKey) {
+  addModalFunc = funcKey;
+  document.getElementById('implForm').reset();
+  document.getElementById('freqGroup').style.display = 'none';
+  document.getElementById('addImplModal').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('addImplModal').classList.remove('open');
+  addModalFunc = null;
+}
+
+document.getElementById('implUnit').addEventListener('change', function() {
+  document.getElementById('freqGroup').style.display =
+    this.value.includes('occurrence') ? '' : 'none';
+});
+
+document.getElementById('implForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  if (!addModalFunc) return;
+  const impl = {
+    name: document.getElementById('implName').value.trim(),
+    complexity: parseFloat(document.getElementById('implComplexity').value) || 0,
+    roi: parseFloat(document.getElementById('implROI').value) || 0,
+    owner: document.getElementById('implOwner').value.trim(),
+    description: document.getElementById('implDesc').value.trim(),
+    impact: document.getElementById('implImpact').value.trim(),
+    timeSaved: parseFloat(document.getElementById('implTimeSaved').value) || 0,
+    unit: document.getElementById('implUnit').value,
+    frequency: parseFloat(document.getElementById('implFrequency').value) || 0
+  };
+  if (!impl.name) return;
+  const funcKey = addModalFunc;
+  await api(`/api/functions/${funcKey}/implementations`, { method: 'POST', body: impl });
+  closeAddModal();
+  await loadAll();
+  openDetail(funcKey);
+});
+
+// Close overlays on outside click
+document.getElementById('detailOverlay').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
+document.getElementById('addImplModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
+
+// Keyboard
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('addImplModal').classList.contains('open')) closeAddModal();
+    else if (document.getElementById('detailOverlay').classList.contains('open')) closeDetail();
+  }
+});
+
+// Initialize
+loadAll();
+</script>
+</body>
+</html>
