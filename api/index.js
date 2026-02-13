@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { getDb } = require('./db');
-const { FUNCTIONS, IMPLEMENTATIONS } = require('./defaults');
+const { FUNCTIONS, IMPLEMENTATIONS, RUBRICS, PRIMARY_METRICS, EFFICIENCY_METRICS } = require('./defaults');
 
 const app = express();
 app.use(cors());
@@ -30,6 +30,15 @@ async function getAllFunctionData() {
         primary: f.metric_primary,
         primaryLevel: f.metric_primary_level,
       },
+      rubrics: {
+        unacceptable: f.rubric_unacceptable || '',
+        capable: f.rubric_capable || '',
+        adaptive: f.rubric_adaptive || '',
+        transformative: f.rubric_transformative || '',
+      },
+      defaultPrimaryMetric: f.default_primary_metric || '',
+      defaultEfficiencyMetric: f.default_efficiency_metric || '',
+      managerOverride: f.manager_override || '',
     };
   }
 
@@ -141,6 +150,27 @@ app.put('/api/functions/:key/metrics', async (req, res) => {
   }
 });
 
+// PUT update manager override level
+app.put('/api/functions/:key/override', async (req, res) => {
+  try {
+    const sql = getDb();
+    const key = req.params.key;
+    const { managerOverride } = req.body;
+
+    if (managerOverride === undefined) return res.status(400).json({ error: 'Missing managerOverride' });
+
+    await sql`UPDATE functions SET manager_override = ${managerOverride} WHERE key = ${key}`;
+
+    const data = await getAllFunctionData();
+    const fd = data[key];
+    if (!fd) return res.status(404).json({ error: 'Function not found' });
+    res.json(fd);
+  } catch (err) {
+    console.error('PUT override error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // POST add implementation
 app.post('/api/functions/:key/implementations', async (req, res) => {
   try {
@@ -246,12 +276,19 @@ app.post('/api/reset', async (req, res) => {
     await sql`DELETE FROM implementations`;
 
     // Reset all functions to zero
-    await sql`UPDATE functions SET full_time = 0, part_time = 0, part_time_hours = 0, total_hours = 0, metric_primary = '', metric_primary_level = ''`;
+    await sql`UPDATE functions SET full_time = 0, part_time = 0, part_time_hours = 0, total_hours = 0, metric_primary = '', metric_primary_level = '', manager_override = ''`;
 
-    // Re-apply default team configs
+    // Re-apply default team configs and rubrics
     for (const f of FUNCTIONS) {
+      const rubric = RUBRICS[f.key] || {};
+      const primaryMetric = PRIMARY_METRICS[f.key] || '';
+      const efficiencyMetric = EFFICIENCY_METRICS[f.key] || '';
       await sql`
-        UPDATE functions SET full_time = ${f.fullTime}, part_time = ${f.partTime}, part_time_hours = ${f.partTimeHours}, total_hours = ${f.totalHours}
+        UPDATE functions SET
+          full_time = ${f.fullTime}, part_time = ${f.partTime}, part_time_hours = ${f.partTimeHours}, total_hours = ${f.totalHours},
+          rubric_unacceptable = ${rubric.unacceptable || ''}, rubric_capable = ${rubric.capable || ''},
+          rubric_adaptive = ${rubric.adaptive || ''}, rubric_transformative = ${rubric.transformative || ''},
+          default_primary_metric = ${primaryMetric}, default_efficiency_metric = ${efficiencyMetric}
         WHERE key = ${f.key}
       `;
     }

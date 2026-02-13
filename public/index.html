@@ -141,6 +141,12 @@ body {
   margin-bottom: 0.5rem;
 }
 .func-card .card-name { font-size: 0.9rem; font-weight: 600; }
+.func-card .card-override {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  font-style: italic;
+}
 .badge {
   display: inline-block;
   padding: 0.2rem 0.6rem;
@@ -223,6 +229,110 @@ body {
 }
 .metric-box .m-value { font-size: 1.3rem; font-weight: 700; }
 .metric-box .m-detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+/* Manager Override */
+.override-section {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.override-section h3 {
+  font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.04em; margin: 0;
+  white-space: nowrap;
+}
+.override-section select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  min-width: 160px;
+}
+.override-section select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.override-note { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
+
+/* Rubric Section */
+.rubric-section {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.rubric-section h3 {
+  font-size: 0.8rem; font-weight: 600; margin-bottom: 0.7rem;
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;
+}
+.rubric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+}
+.rubric-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.rubric-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+}
+.rubric-item.rubric-transformative::before { background: var(--green); }
+.rubric-item.rubric-adaptive::before { background: var(--blue); }
+.rubric-item.rubric-capable::before { background: var(--yellow); }
+.rubric-item.rubric-unacceptable::before { background: var(--red); }
+.rubric-item.rubric-current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+.rubric-item .rubric-tier {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.3rem;
+}
+.rubric-item.rubric-transformative .rubric-tier { color: var(--green); }
+.rubric-item.rubric-adaptive .rubric-tier { color: var(--blue); }
+.rubric-item.rubric-capable .rubric-tier { color: var(--yellow-dim); }
+.rubric-item.rubric-unacceptable .rubric-tier { color: var(--red); }
+.rubric-item .rubric-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45; }
+
+/* Function Metrics */
+.func-metrics {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.func-metrics h3 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.func-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.func-metric-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+.func-metric-item .fm-label {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-muted); font-weight: 600; margin-bottom: 0.2rem;
+}
+.func-metric-item .fm-value { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
 
 /* Team Config */
 .team-config {
@@ -428,6 +538,8 @@ body {
   .detail-panel { padding: 1.2rem; }
   .overlay { padding: 0.8rem; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .rubric-grid { grid-template-columns: 1fr; }
+  .func-metrics-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -625,24 +737,24 @@ async function loadAll() {
 }
 
 // ========================
-// SCORING (client-side for instant UI)
+// SCORING (client-side for instant UI) — HARDER THRESHOLDS
 // ========================
 
 // Auto-calculate an implementation's maturity level from complexity, ROI, and time saved
 function calcImplLevel(impl) {
-  // Complexity score: 1-3 = Capable(1), 4-7 = Adaptive(2), 8-10 = Transformative(3)
+  // Complexity score: 1-4 = Capable(1), 5-7 = Adaptive(2), 8-10 = Transformative(3)
   const c = parseFloat(impl.complexity) || 0;
   let complexityScore = 1;
   if (c >= 8) complexityScore = 3;
-  else if (c >= 4) complexityScore = 2;
+  else if (c >= 5) complexityScore = 2;
 
-  // ROI score: <1000 = Capable(1), 1000-10000 = Adaptive(2), >10000 = Transformative(3)
+  // ROI score: <3000 = Capable(1), 3000-15000 = Adaptive(2), >15000 = Transformative(3)
   const roi = parseFloat(impl.roi) || 0;
   let roiScore = 1;
-  if (roi > 10000) roiScore = 3;
-  else if (roi >= 1000) roiScore = 2;
+  if (roi > 15000) roiScore = 3;
+  else if (roi >= 3000) roiScore = 2;
 
-  // Time saved score: convert to hrs/week, <1 = Capable(1), 1-5 = Adaptive(2), >5 = Transformative(3)
+  // Time saved score: convert to hrs/week, <2 = Capable(1), 2-8 = Adaptive(2), >8 = Transformative(3)
   let hrsPerWeek = 0;
   const ts = parseFloat(impl.timeSaved) || 0;
   const freq = parseFloat(impl.frequency) || 0;
@@ -655,12 +767,12 @@ function calcImplLevel(impl) {
     }
   }
   let timeScore = 1;
-  if (hrsPerWeek > 5) timeScore = 3;
-  else if (hrsPerWeek >= 1) timeScore = 2;
+  if (hrsPerWeek > 8) timeScore = 3;
+  else if (hrsPerWeek >= 2) timeScore = 2;
 
   const avg = (complexityScore + roiScore + timeScore) / 3;
-  if (avg > 2.3) return 'transformative';
-  if (avg >= 1.7) return 'adaptive';
+  if (avg >= 2.5) return 'transformative';
+  if (avg >= 1.8) return 'adaptive';
   return 'capable';
 }
 
@@ -686,13 +798,17 @@ function getImplLevel(implementations) {
   const { totalPoints, counts } = calcImplScore(implementations);
   const t = counts.transformative || 0;
   const a = counts.adaptive || 0;
-  if (t >= 2) return 'transformative';
-  if (t >= 1 && a >= 3 && totalPoints >= 20) return 'transformative';
-  if (a >= 5) return 'transformative';
-  if (a >= 3) return 'adaptive';
-  if (t >= 1 && a >= 1) return 'adaptive';
-  if (totalPoints >= 10) return 'adaptive';
-  if ((counts.capable || 0) >= 1 || a >= 1 || totalPoints >= 3) return 'capable';
+  // HARDER: Need 3T, or 2T+3A+25pts, or 6A
+  if (t >= 3) return 'transformative';
+  if (t >= 2 && a >= 3 && totalPoints >= 25) return 'transformative';
+  if (a >= 6) return 'transformative';
+  // HARDER: Need 4A, or 1T+2A, or 15pts
+  if (a >= 4) return 'adaptive';
+  if (t >= 1 && a >= 2) return 'adaptive';
+  if (totalPoints >= 15) return 'adaptive';
+  // Capable: 2+ impls of any qualifying type, or 5+ pts
+  if ((counts.capable || 0) + a + t >= 2 || totalPoints >= 5) return 'capable';
+  if ((counts.capable || 0) >= 1 || a >= 1 || t >= 1) return 'capable';
   return 'unacceptable';
 }
 
@@ -719,9 +835,10 @@ function calcEfficiency(fd) {
   });
   if (totalHoursWeek === 0) return null;
   const pct = (totalHoursWeek / tc.totalHours) * 100;
+  // HARDER efficiency thresholds
   let level = 'capable';
-  if (pct >= 25) level = 'transformative';
-  else if (pct >= 10) level = 'adaptive';
+  if (pct >= 30) level = 'transformative';
+  else if (pct >= 15) level = 'adaptive';
   return { totalHoursWeek, pct, level, breakdown };
 }
 
@@ -743,6 +860,15 @@ function getFinalScore(fd) {
   return { finalLevel, implLevel, eff, boostNote };
 }
 
+// Get the displayed level — manager override takes precedence if set
+function getDisplayLevel(fd) {
+  const { finalLevel } = getFinalScore(fd);
+  if (fd.managerOverride && fd.managerOverride !== '') {
+    return fd.managerOverride;
+  }
+  return finalLevel;
+}
+
 // ========================
 // RENDER
 // ========================
@@ -753,21 +879,23 @@ function renderGrid() {
   const levelCounts = { transformative: 0, adaptive: 0, capable: 0, unacceptable: 0 };
 
   Object.entries(functionData).forEach(([key, fd]) => {
-    const { finalLevel } = getFinalScore(fd);
+    const displayLevel = getDisplayLevel(fd);
     const implCount = fd.implementations.length;
     totalImpl += implCount;
-    levelCounts[finalLevel]++;
+    levelCounts[displayLevel]++;
+
+    const hasOverride = fd.managerOverride && fd.managerOverride !== '';
 
     const card = document.createElement('div');
     card.className = 'func-card';
-    card.dataset.level = finalLevel;
+    card.dataset.level = displayLevel;
     card.onclick = () => openDetail(key);
     card.innerHTML = `
       <div class="card-header">
         <span class="card-name">${fd.name}</span>
-        <span class="badge badge-${finalLevel}">${finalLevel}</span>
+        <span class="badge badge-${displayLevel}">${displayLevel}</span>
       </div>
-      <div class="card-meta">${implCount} implementation${implCount !== 1 ? 's' : ''}</div>
+      <div class="card-meta">${implCount} implementation${implCount !== 1 ? 's' : ''}${hasOverride ? ' &middot; <span style="font-style:italic">Manager set</span>' : ''}</div>
     `;
     grid.appendChild(card);
   });
@@ -786,8 +914,11 @@ function openDetail(key) {
   selectedFunc = key;
   const fd = functionData[key];
   const { finalLevel, implLevel, eff, boostNote } = getFinalScore(fd);
+  const displayLevel = getDisplayLevel(fd);
   const { totalPoints, counts } = calcImplScore(fd.implementations);
   const panel = document.getElementById('detailPanel');
+
+  const hasOverride = fd.managerOverride && fd.managerOverride !== '';
 
   let efficiencyHTML = '';
   if (eff) {
@@ -805,6 +936,30 @@ function openDetail(key) {
   }
 
   const boostHTML = boostNote ? `<div class="m-detail" style="color:var(--accent);margin-top:0.2rem">${boostNote}</div>` : '';
+
+  // Rubric section
+  const rubrics = fd.rubrics || {};
+  const tiers = ['unacceptable', 'capable', 'adaptive', 'transformative'];
+  const rubricHTML = tiers.map(tier => {
+    const isCurrent = displayLevel === tier;
+    return `
+      <div class="rubric-item rubric-${tier}${isCurrent ? ' rubric-current' : ''}">
+        <div class="rubric-tier">${capitalize(tier)}${isCurrent ? ' (Current)' : ''}</div>
+        <div class="rubric-desc">${esc(rubrics[tier] || 'No description available')}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Function-specific metrics
+  const funcMetricsHTML = (fd.defaultPrimaryMetric || fd.defaultEfficiencyMetric) ? `
+    <div class="func-metrics">
+      <h3>Function Metrics</h3>
+      <div class="func-metrics-grid">
+        ${fd.defaultPrimaryMetric ? `<div class="func-metric-item"><div class="fm-label">Primary Metric (RPE)</div><div class="fm-value">${esc(fd.defaultPrimaryMetric)}</div></div>` : ''}
+        ${fd.defaultEfficiencyMetric ? `<div class="func-metric-item"><div class="fm-label">Efficiency Metric</div><div class="fm-value">${esc(fd.defaultEfficiencyMetric)}</div></div>` : ''}
+      </div>
+    </div>
+  ` : '';
 
   const implListHTML = fd.implementations.map(impl => {
     const implLvl = calcImplLevel(impl);
@@ -830,18 +985,19 @@ function openDetail(key) {
     <button class="close-btn" onclick="closeDetail()">&times;</button>
     <div class="detail-header">
       <h2>${fd.name}</h2>
-      <span class="badge badge-${finalLevel}">${finalLevel}</span>
+      <span class="badge badge-${displayLevel}">${displayLevel}</span>
+      ${hasOverride ? `<span style="font-size:0.72rem;color:var(--text-muted);font-style:italic">(Auto-score: ${capitalize(finalLevel)})</span>` : ''}
     </div>
     <div class="metrics-row">
       <div class="metric-box">
-        <div class="m-label">Final Score</div>
-        <div class="m-value" style="color:${levelColor(finalLevel)}">${capitalize(finalLevel)}</div>
+        <div class="m-label">Official Level</div>
+        <div class="m-value" style="color:${levelColor(displayLevel)}">${capitalize(displayLevel)}</div>
         ${boostHTML}
       </div>
       <div class="metric-box">
-        <div class="m-label">Implementation Score</div>
-        <div class="m-value">${totalPoints} pts</div>
-        <div class="m-detail">${counts.transformative||0}T / ${counts.adaptive||0}A / ${counts.capable||0}C</div>
+        <div class="m-label">Auto-Score</div>
+        <div class="m-value" style="color:${levelColor(finalLevel)}">${capitalize(finalLevel)}</div>
+        <div class="m-detail">${totalPoints} pts &middot; ${counts.transformative||0}T / ${counts.adaptive||0}A / ${counts.capable||0}C</div>
       </div>
       ${efficiencyHTML}
       <div class="metric-box">
@@ -849,6 +1005,22 @@ function openDetail(key) {
         <div class="m-value">${fd.implementations.length}</div>
       </div>
     </div>
+    <div class="override-section">
+      <h3>Manager Override</h3>
+      <select onchange="updateOverride('${key}', this.value)">
+        <option value="" ${!hasOverride ? 'selected' : ''}>Use auto-score (${capitalize(finalLevel)})</option>
+        <option value="unacceptable" ${fd.managerOverride==='unacceptable'?'selected':''}>Unacceptable</option>
+        <option value="capable" ${fd.managerOverride==='capable'?'selected':''}>Capable</option>
+        <option value="adaptive" ${fd.managerOverride==='adaptive'?'selected':''}>Adaptive</option>
+        <option value="transformative" ${fd.managerOverride==='transformative'?'selected':''}>Transformative</option>
+      </select>
+      <span class="override-note">Set the official quarterly maturity level. Overrides auto-scoring for reporting.</span>
+    </div>
+    <div class="rubric-section">
+      <h3>Maturity Rubric</h3>
+      <div class="rubric-grid">${rubricHTML}</div>
+    </div>
+    ${funcMetricsHTML}
     <div class="team-config">
       <h3>Team Configuration</h3>
       <div class="team-fields">
@@ -882,27 +1054,27 @@ function openDetail(key) {
       <div class="si-section si-trans">
         <div class="si-section-title">Transformative</div>
         <ul>
-          <li>2+ Transformative implementations</li>
-          <li>1 Transformative + 3+ Adaptive + 20+ points</li>
-          <li>5+ Adaptive implementations</li>
-          <li>OR efficiency >= 25%</li>
+          <li>3+ Transformative implementations</li>
+          <li>2 Transformative + 3+ Adaptive + 25+ points</li>
+          <li>6+ Adaptive implementations</li>
+          <li>OR efficiency >= 30%</li>
         </ul>
       </div>
       <div class="si-section si-adap">
         <div class="si-section-title">Adaptive</div>
         <ul>
-          <li>3+ Adaptive implementations</li>
-          <li>1 Transformative + any Adaptive</li>
-          <li>10+ total points</li>
-          <li>OR efficiency 10-25%</li>
+          <li>4+ Adaptive implementations</li>
+          <li>1 Transformative + 2+ Adaptive</li>
+          <li>15+ total points</li>
+          <li>OR efficiency 15-30%</li>
         </ul>
       </div>
       <div class="si-section si-cap">
         <div class="si-section-title">Capable</div>
         <ul>
-          <li>1+ Capable or Adaptive implementation</li>
-          <li>3+ total points</li>
-          <li>OR efficiency < 10%</li>
+          <li>2+ implementations of any qualifying type</li>
+          <li>5+ total points</li>
+          <li>OR efficiency &lt; 15%</li>
         </ul>
       </div>
       <div class="si-section si-unac">
@@ -911,14 +1083,16 @@ function openDetail(key) {
       </div>
       <div style="margin-top:0.6rem;font-size:0.7rem;color:var(--text-muted)">
         Points: Capable=1, Adaptive=3, Transformative=5<br>
-        Final score = higher of implementation score vs efficiency score.
+        Individual scoring: Complexity (1-4=C, 5-7=A, 8-10=T) &middot; ROI (&lt;3K=C, 3-15K=A, &gt;15K=T) &middot; Time (&lt;2hr/wk=C, 2-8=A, &gt;8=T)<br>
+        Avg &ge; 2.5 = T, &ge; 1.8 = A, else C<br>
+        Official level = manager override if set, else auto-score. Auto-score = higher of implementation vs efficiency.
       </div>
     </div>
   `;
   document.getElementById('detailOverlay').classList.add('open');
 
   // Celebrate transformative functions every time they're opened!
-  if (finalLevel === 'transformative') {
+  if (displayLevel === 'transformative') {
     setTimeout(() => fireConfetti('transformative', fd.name), 300);
   }
 }
@@ -963,6 +1137,14 @@ async function updatePrimaryMetric(funcKey, field, val) {
   const body = {};
   body[field] = val;
   await api(`/api/functions/${funcKey}/metrics`, { method: 'PUT', body });
+}
+
+async function updateOverride(funcKey, val) {
+  cacheLevels();
+  await api(`/api/functions/${funcKey}/override`, { method: 'PUT', body: { managerOverride: val } });
+  await loadAll();
+  checkForLevelUp();
+  openDetail(funcKey);
 }
 
 let addModalFunc = null;
