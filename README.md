@@ -6,7 +6,7 @@ Company-wide AI implementation tracking & maturity scoring dashboard.
 
 ## Overview
 
-Tracks AI adoption across 9 business functions (SEO, Paid Media, Creative/Design, Client Success, Sales, Brand, Operations, Recruiting, Finance) with automatic maturity scoring across four tiers:
+Tracks AI adoption across 9 business functions (SEO, Paid Media, Creative/Design, Client Success, Sales, Brand and Marketing, Operations, Recruiting, Finance) with automatic maturity scoring across four tiers:
 
 - **Transformative** — AI autonomously manages core workflows
 - **Adaptive** — AI integrated into production pipelines with human oversight

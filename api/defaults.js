@@ -6,7 +6,7 @@ const FUNCTIONS = [
   { key: 'creative_design', name: 'Creative/Design', fullTime: 3, partTime: 0, partTimeHours: 0, totalHours: 120 },
   { key: 'client_success', name: 'Client Success', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },
   { key: 'sales', name: 'Sales', fullTime: 2, partTime: 1, partTimeHours: 20, totalHours: 100 },
-  { key: 'brand', name: 'Brand', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },
+  { key: 'brand', name: 'Brand and Marketing', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },
   { key: 'operations', name: 'Operations', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },
   { key: 'recruiting', name: 'Recruiting', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },
   { key: 'finance', name: 'Finance', fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 },

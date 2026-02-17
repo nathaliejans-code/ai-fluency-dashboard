@@ -75,7 +75,7 @@ function getDefaultData() {
         ],
         metrics: { primary: '', primaryLevel: '' }
       },
-      brand: { name: 'Brand', teamConfig: { fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 }, implementations: [], metrics: { primary: '', primaryLevel: '' } },
+      brand: { name: 'Brand and Marketing', teamConfig: { fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 }, implementations: [], metrics: { primary: '', primaryLevel: '' } },
       operations: { name: 'Operations', teamConfig: { fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 }, implementations: [], metrics: { primary: '', primaryLevel: '' } },
       recruiting: { name: 'Recruiting', teamConfig: { fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 }, implementations: [], metrics: { primary: '', primaryLevel: '' } },
       finance: { name: 'Finance', teamConfig: { fullTime: 0, partTime: 0, partTimeHours: 0, totalHours: 0 }, implementations: [], metrics: { primary: '', primaryLevel: '' } }
